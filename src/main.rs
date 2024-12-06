@@ -377,13 +377,13 @@ impl RFID {
 #[launch]
 fn rocket() -> _ {
     dotenv().ok(); // Load environment variables from a .env file
-
     let host = env::var("HOST").unwrap_or("0.0.0.0".to_string());
     let port: u16 = env::var("PORT")
-        .unwrap_or("8000".to_string())
-        .parse()
-        .unwrap_or(8000);
+    .unwrap_or("8000".to_string())
+    .parse()
+    .unwrap_or(8000);
 
+    println!("Card Reader,Write API for Ehuoyan ER302 by https://sajx.net/ ⭐️");
     rocket::build()
         .configure(rocket::Config {
             address: host.parse().unwrap(),
