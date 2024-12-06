@@ -1,0 +1,7 @@
+[serial]
+portname = "/dev/ttyS0"
+baudrate = 112500
+
+[api]
+host = "0.0.0.0"
+port = 8888
