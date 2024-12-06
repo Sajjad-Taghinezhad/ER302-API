@@ -2,8 +2,8 @@ use rocket::serde::{json::Json, Serialize};
 use serialport::SerialPort;
 use std::io::{Read, Write};
 use std::time::Duration;
-use dotenv::dotenv; // For loading environment variables
-use std::env; // To access environment variables
+use config::{Config, File, ConfigError};  // Make sure to import Config and File
+// use std::error::Error;
 
 const PORTNAME: &str = "/dev/tty";
 const BAUDRATE: u32 = 112500;
@@ -28,15 +28,25 @@ struct RFID {
     port: Box<dyn SerialPort>,
 }
 
-fn load_config() -> Result<(String, u32), Box<dyn std::error::Error>> {
-    dotenv().ok(); // Load environment variables from `.env` file
+fn load_config() -> Result<(String, u32, String, u16), ConfigError> {
+    // Use Config::builder() instead of Config::new()
+    let mut config = Config::builder();
 
-    // Get the serial port and baudrate from the environment variables
-    let portname = env::var("PORTNAME")?;
-    let baudrate: u32 = env::var("BAUDRATE")?.parse()?;
+    // Add the configuration file (app.conf)
+    config = config.add_source(File::with_name("app"));
 
-    Ok((portname, baudrate))
+    // Build the configuration and unwrap values
+    let config = config.build()?;
+
+    // Extract values
+    let portname: String = config.get("serial.portname")?;
+    let baudrate: u32 = config.get("serial.baudrate")?;
+    let host: String = config.get("api.host")?;
+    let port: u16 = config.get("api.port")?;
+
+    Ok((portname, baudrate, host.to_string(), port))
 }
+
 
 
 impl RFID {
@@ -376,24 +386,24 @@ impl RFID {
 
 #[launch]
 fn rocket() -> _ {
-    dotenv().ok(); // Load environment variables from a .env file
-    let host = env::var("HOST").unwrap_or("0.0.0.0".to_string());
-    let port: u16 = env::var("PORT")
-    .unwrap_or("8000".to_string())
-    .parse()
-    .unwrap_or(8000);
+    // Load configuration
+    let (host, port) = match load_config() {
+        Ok((_,_,host, port)) => {
+            (host,port)
+        }
+        Err(e) => {
+            println!("error : {:?}",e.to_string());
+            ("0.0.0.0".to_string(), 8000)
+        }
+    };
 
-    println!("Card Reader,Write API for Ehuoyan ER302 by https://sajx.net/ ⭐️. Under Bartarandishan License");
     rocket::build()
         .configure(rocket::Config {
             address: host.parse().unwrap(),
             port,
             ..Default::default()
         })
-        .mount(
-            "/",
-            routes![id, read_balance, set_balance, increase, decrease, initcard],
-        )
+        .mount("/", routes![id, read_balance, set_balance, increase, decrease, initcard])
 }
 
 
@@ -403,7 +413,7 @@ fn id() -> Json<ApiResponse> {
     let baudrate: u32 ;
     
     match load_config() {
-        Ok(conf) => (portname, baudrate) = conf , 
+        Ok(conf) => (portname, baudrate,_,_) = conf , 
         Err(_) => (portname, baudrate) = (PORTNAME.to_string(), BAUDRATE)
     }
     match serialport::new(portname, baudrate)
@@ -437,7 +447,7 @@ fn read_balance() -> Json<ApiResponse> {
     let baudrate: u32 ;
     
     match load_config() {
-        Ok(conf) => (portname, baudrate) = conf , 
+ Ok(conf) => (portname, baudrate,_,_) = conf , 
         Err(_) => (portname, baudrate) = (PORTNAME.to_string(), BAUDRATE)
     }
     match serialport::new(portname, baudrate)
@@ -472,7 +482,7 @@ fn set_balance(value: u32) -> Json<ApiResponse> {
     let baudrate: u32 ;
     
     match load_config() {
-        Ok(conf) => (portname, baudrate) = conf , 
+ Ok(conf) => (portname, baudrate,_,_) = conf , 
         Err(_) => (portname, baudrate) = (PORTNAME.to_string(), BAUDRATE)
     }
     match serialport::new(portname, baudrate)
@@ -506,7 +516,7 @@ fn increase(value: u32) -> Json<ApiResponse> {
     let baudrate: u32 ;
     
     match load_config() {
-        Ok(conf) => (portname, baudrate) = conf , 
+ Ok(conf) => (portname, baudrate,_,_) = conf , 
         Err(_) => (portname, baudrate) = (PORTNAME.to_string(), BAUDRATE)
     }
     match serialport::new(portname, baudrate)
@@ -540,7 +550,7 @@ fn decrease(value: u32) -> Json<ApiResponse> {
     let baudrate: u32 ;
     
     match load_config() {
-        Ok(conf) => (portname, baudrate) = conf , 
+ Ok(conf) => (portname, baudrate,_,_) = conf , 
         Err(_) => (portname, baudrate) = (PORTNAME.to_string(), BAUDRATE)
     }
     match serialport::new(portname, baudrate)
@@ -574,7 +584,7 @@ fn initcard() -> Json<ApiResponse> {
     let baudrate: u32 ;
     
     match load_config() {
-        Ok(conf) => (portname, baudrate) = conf , 
+ Ok(conf) => (portname, baudrate,_,_) = conf , 
         Err(_) => (portname, baudrate) = (PORTNAME.to_string(), BAUDRATE)
     }
     match serialport::new(portname, baudrate)
