@@ -383,7 +383,7 @@ fn rocket() -> _ {
     .parse()
     .unwrap_or(8000);
 
-    println!("Card Reader,Write API for Ehuoyan ER302 by https://sajx.net/ ⭐️");
+    println!("Card Reader,Write API for Ehuoyan ER302 by https://sajx.net/ ⭐️. Under Bartarandishan License");
     rocket::build()
         .configure(rocket::Config {
             address: host.parse().unwrap(),
