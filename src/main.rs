@@ -3,9 +3,10 @@ use serialport::SerialPort;
 use std::io::{Read, Write};
 use std::time::Duration;
 use config::{Config, File, ConfigError};  // Make sure to import Config and File
-// use std::error::Error;
+use std::thread;
 
-const PORTNAME: &str = "/dev/tty";
+
+const PORTNAME: &str = "COM3";
 const BAUDRATE: u32 = 112500;
 const HEADER: &[u8] = &[0xaa, 0xbb];
 // Key A
@@ -99,6 +100,8 @@ impl RFID {
             }
             Err(e) => eprintln!("Failed to write to serial port: {}", e),
         }
+        // thread::sleep(Duration::from_millis(100)); // Add delay only for Windows: (cause Windows is so lazy and can not handle the speed of Rust)
+
 
         // Buffer to read data
         let mut buffer: Vec<u8> = vec![0; 1024]; // Allocate a large buffer initially
