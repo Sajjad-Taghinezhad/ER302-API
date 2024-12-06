@@ -1,0 +1,12 @@
+[package]
+name = "nfc"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+rocket = { version = "0.5.1", features = ["json"]}
+serialport = "*"
+serde = "1.0.215"
+dotenv = "0.15"
+
+
