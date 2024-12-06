@@ -376,11 +376,26 @@ impl RFID {
 
 #[launch]
 fn rocket() -> _ {
-    rocket::build().mount(
-        "/",
-        routes![id, read_balance, set_balance, increase, decrease, initcard],
-    )
+    dotenv().ok(); // Load environment variables from a .env file
+
+    let host = env::var("HOST").unwrap_or("0.0.0.0".to_string());
+    let port: u16 = env::var("PORT")
+        .unwrap_or("8000".to_string())
+        .parse()
+        .unwrap_or(8000);
+
+    rocket::build()
+        .configure(rocket::Config {
+            address: host.parse().unwrap(),
+            port,
+            ..Default::default()
+        })
+        .mount(
+            "/",
+            routes![id, read_balance, set_balance, increase, decrease, initcard],
+        )
 }
+
 
 #[get("/id")]
 fn id() -> Json<ApiResponse> {
